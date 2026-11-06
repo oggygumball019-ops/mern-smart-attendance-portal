@@ -8,7 +8,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = "https://mern-smart-attendance-backend.onrender.com/";
 
 const calculateDistance = (vec1, vec2) => {
   if (!vec1 || !vec2 || vec1.length !== vec2.length) return 1.0;
