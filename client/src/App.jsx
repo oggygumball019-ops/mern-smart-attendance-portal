@@ -29,7 +29,7 @@ export default function App() {
 
   const [regName, setRegName] = useState('');
   const [regRollNo, setRegRollNo] = useState('');
-  const [regStatusMsg, setRegStatusMsg] = useState('');
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -187,36 +187,49 @@ export default function App() {
     }
   };
 
-  const handleEnrollStudent = async (e) => {
-    e.preventDefault();
-    if (!regName || !regRollNo) {
-      setRegStatusMsg('Please enter both Name and Roll Number.');
+ const handleEnrollStudent = async (e) => {
+  e.preventDefault();
+  if (!regName || !regRollNo) {
+    alert('Please enter both Name and Roll Number.');
+    return;
+  }
+
+  try {
+    const descriptor = await detectAndDrawFace();
+
+    if (!descriptor) {
+      alert('No face detected. Please face the camera directly.');
       return;
     }
 
-    try {
-      setRegStatusMsg('Capturing face vector...');
-      const descriptor = await detectAndDrawFace();
+    // Convert Float32Array to standard array for backend JSON parsing
+    const faceEmbeddingArray = Array.from(descriptor);
 
-      if (!descriptor) {
-        setRegStatusMsg('No face detected. Please face the camera directly.');
-        return;
-      }
+    const res = await axios.post(`${API_BASE_URL}/students/register`, {
+      name: regName.trim(),
+      rollNo: regRollNo.trim(),
+      faceEmbedding: faceEmbeddingArray
+    });
 
-      const res = await axios.post(`${API_BASE_URL}/students/register`, {
-        name: regName.trim(),
-        rollNo: regRollNo.trim(),
-        faceDescriptor: descriptor
-      });
+    if (res.status === 200 || res.status === 201) {
+      // 1. Trigger dynamic green button
+      setIsRegistered(true);
 
-      setRegStatusMsg(`Success: ${res.data.message || 'Student enrolled!'}`);
+      // 2. Clear inputs & refresh analytics stats
       setRegName('');
       setRegRollNo('');
       await syncPortalData();
-    } catch (err) {
-      setRegStatusMsg(err.response?.data?.message || 'Failed to register student.');
+
+      // 3. Reset button back to blue after 3 seconds
+      setTimeout(() => {
+        setIsRegistered(false);
+      }, 3000);
     }
-  };
+  } catch (err) {
+    console.error('Registration error details:', err.response?.data || err.message);
+    alert(err.response?.data?.message || 'Failed to register student.');
+  }
+};
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -479,17 +492,24 @@ export default function App() {
                 </div>
 
                 <button
-                  type="submit"
-                  style={{ backgroundColor: '#2563EB', color: '#FFF', padding: '10px', fontSize: '14px', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  Capture & Register Face
-                </button>
-
-                {regStatusMsg && (
-                  <div style={{ padding: '8px', backgroundColor: '#F1F5F9', borderRadius: '6px', fontSize: '12px', color: '#334155', textAlign: 'center' }}>
-                    {regStatusMsg}
-                  </div>
-                )}
+                    type="submit"
+                    onClick={handleEnrollStudent}
+                    style={{
+                    width: '100%',
+                    padding: '12px 20px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#ffffff',
+                    backgroundColor: isRegistered ? '#10B981' : '#2563EB', // #10B981 is Solid Green, #2563EB is Blue
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+    marginTop: '15px'
+  }}
+>
+  {isRegistered ? "✓ Successfully Registered!" : "Capture & Register Face"}
+</button>
               </form>
             </div>
           )}
