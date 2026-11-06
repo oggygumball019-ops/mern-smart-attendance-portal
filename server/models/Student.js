@@ -7,4 +7,6 @@ const studentSchema = new mongoose.Schema({
   faceEmbedding: { type: [Number], required: true }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Student', studentSchema);
+module.exports =
+  mongoose.models.Student ||
+  mongoose.model('Student', studentSchema);
