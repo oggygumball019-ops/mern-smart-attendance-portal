@@ -232,16 +232,11 @@ app.get('/api/attendance/stats', authenticateToken, async (req, res) => {
 });
 const path = require('path');
 
-// 1. Serve static React files from the dist folder
-app.use(express.static(path.join(__dirname, 'dist')));
-
-// 2. Route all web requests to React's index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
 // -----------------------------------------------------------------------------
 // START EXPRESS SERVER
 // -----------------------------------------------------------------------------
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+module.exports = app;
