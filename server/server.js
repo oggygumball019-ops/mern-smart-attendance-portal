@@ -230,7 +230,15 @@ app.get('/api/attendance/stats', authenticateToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+const path = require('path');
 
+// 1. Serve static React files from the dist folder
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// 2. Route all web requests to React's index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 // -----------------------------------------------------------------------------
 // START EXPRESS SERVER
 // -----------------------------------------------------------------------------
